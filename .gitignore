@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Dev files
+TestImages/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -348,3 +351,11 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/JaAsm/JaAsm.vcxproj.filters
+/JaAsm/JaAsm.vcxproj.user
+/JaAsm/framework.h
+/JaAsm/JaAsm.vcxproj
+/ProjectEdgeDetection/JAProjectEdgeDetection.vcxproj
+/ProjectEdgeDetection/JAProjectEdgeDetection.vcxproj.filters
+/ProjectEdgeDetection/JAProjectEdgeDetection.vcxproj.user
+/ProjectEdgeDetection/ProjectEdgeDetection.sln
