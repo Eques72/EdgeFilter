@@ -564,7 +564,6 @@ namespace JAProjectEdgeDetection {
 				!pictureBox1->Image->RawFormat->Equals(System::Drawing::Imaging::ImageFormat::Png) &&
 				!pictureBox1->Image->RawFormat->Equals(System::Drawing::Imaging::ImageFormat::Tiff))
 				throw 1;
-			//System.argumenex
 
 			//set image path to the connector
 			connector->setImage(connector->converSysStrToStdStr(this->openFileDialog1->FileName));

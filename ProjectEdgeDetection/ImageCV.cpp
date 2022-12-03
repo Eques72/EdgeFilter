@@ -4,22 +4,16 @@ void ImageCV::readImage(std::string path)
 {
 	cv::Mat m;
 	if (isRGB)
-	{
 		m = cv::imread(path.c_str(), cv::IMREAD_COLOR);
-	}
 	else 
-	{
 		m = cv::imread(path.c_str(), cv::IMREAD_GRAYSCALE);
-//		cv::cvtColor(m, m, cv::COLOR_BGR2GRAY, 1);
-	}
+	
 	this->imageSize = m.total() * m.channels();
 	this->imgArray = new std::byte[imageSize];
 	this->imageHeight = m.rows;
 	this->imageWidth = m.cols;
 	for (int i = 0; i < this->imageSize; i++)
-	{
 		imgArray[i] = (std::byte)m.data[i];
-	}
 }
 
 ImageCV::ImageCV(std::string path, bool rgb): isRGB(rgb)
@@ -40,9 +34,7 @@ ImageCV::ImageCV(const ImageCV& i)
 	this->numberOfChannels = i.numberOfChannels;
 	this->isRGB = i.isRGB;
 	for (int it = 0; it < this->getSize(); it++) 
-	{
 		this->imgArray[it] = i.getArray()[it];
-	}
 }
 
 ImageCV::ImageCV(int imgSize, int imgWidth, int imgHeight, bool rgb)
@@ -79,9 +71,7 @@ void ImageCV::setImage(cv::Mat m, bool RGB)
 		this->numberOfChannels = 1;
 
 	if (imgArray != nullptr) 
-	{
 		delete[] imgArray;
-	}
 	
 	this->imageSize = m.total() * m.channels();
 	this->imageHeight = m.rows;

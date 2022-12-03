@@ -1,3 +1,22 @@
+;============================================================
+; File: JaDll.asm									;
+;															;
+; An assembly project, which contains a pocedure for	 	;
+; edge detection algorithm in images						;
+;															;
+; Creator: Adrian Zarêba									;					
+;															;
+; Version:		
+;		2.12.22
+;		18.11.22
+;		16.11.22
+;		3.11.22
+; 0.1 / 22.10.2022 - file and initial comments created		;
+; Past versions/Version history:							;
+; -															;
+;============================================================
+
+
 ;NOTATKI
 ;[+4] przesuwa o 1 index (32bity);
 ;r9d - 32 bit
@@ -16,15 +35,23 @@ maxrgbvalue WORD 255
 ;zero real4 0.0
 
 .code
-MyProc proc ;width=RCX, height-RDX, src-R8, sec_src=R9
-;RDX - height
-;RCX - width
-;R8 -src image
-;R9 - output image
-;Free TO USE - rax - y, rbx - x, rdi - pos, rsi, r10-15
 
-; PARAMS REGISTERS = RCX, RDX, R8, R9
-; USED REGISTERS = RAX, RBX, RDI, R10, R11, R12, R13
+;================================================================================================================
+; Procedure: NAME																				;
+; Description:																									;
+;	Imposes edge detection filter on image represented as an array of pixels(r g b). The filter is based		;
+; 	 on multiplication of neighbouring pixels and matrix of weights.											;
+;    It works on two arrays stored in memory.																	;
+;																												;
+; Parameters:																									;
+;  rdx = image height - in pixels,																				;
+;  rcx = image width - in pixels,																				;
+;  r8 = original image source - address in memory of pixel array which represents original image to be filtered;
+;  r9 = edited image source - address in memory of pixel array which represents a new filtered image,			;
+;	 all changes are to be made on this array	
+;  Uses registers: RAX, RBX, RDI, R10, R11, R12, R13
+;================================================================================================================
+MyProc proc 
 
 PUSH RAX
 PUSH RBX
@@ -33,7 +60,6 @@ PUSH R10
 PUSH R11
 PUSH R12
 PUSH R13
-
 
 mov rax, 0 ;Y - counter for outer loop
 mov rbx, 0 ;X - counter for inner loop
@@ -96,7 +122,6 @@ cmp rax, rdx	;outer loop
 JL	ROWS  		;outer loop
 ;------------
 
-
 POP R13
 POP R12
 POP R11
@@ -104,7 +129,6 @@ POP R10
 POP RDI
 POP RBX
 POP RAX
-
 
 ret
 
@@ -114,7 +138,6 @@ JMP END_OF_RED	;Jump back to the loop
 REDUCE_BIG:		;Accesible only by jump
 MOV R10W, maxrgbvalue	;Make color value fit its upper boundary
 JMP END_OF_RED	;Jump back to the loop
-
 
 MyProc endp
 end

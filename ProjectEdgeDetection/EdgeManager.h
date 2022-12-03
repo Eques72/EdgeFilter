@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include <cstddef>
+#include <fstream>
 #include "ImageCV.h"
 
 //MAX IMAGE SIZE IS 30.000 x 30.000 or 1.000.000.000 px ???

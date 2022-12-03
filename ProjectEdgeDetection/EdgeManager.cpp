@@ -1,5 +1,4 @@
 #include "EdgeManager.h"
-#include <iostream>
 
 void edgeCppFilterO(ImageCV& input, ImageCV& output, int startingRow, int height, bool isRGB);
 
@@ -12,6 +11,20 @@ void EdgeManager::setSourceImage(std::string path, bool isToBeRbg)
 		path.insert(pos, "_EdgeOutput_");
 	else
 		path = "_EdgeOutput_" + path;
+	
+	/* try to open file to read to check if file already exists */
+	std::ifstream iffile;
+	iffile.open(path);
+	while (iffile)
+	{
+		std::size_t pos = path.rfind('.');
+		if (pos != std::string::npos)
+			path.insert(pos, std::to_string(1));
+		else
+			path += std::to_string(1);
+		iffile.close();
+		iffile.open(path);
+	}	
 
 	this->outputPath = path;
 }
@@ -84,7 +97,6 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 	}
 	else if(libType == 1) //ASM
 	{
-		//typedef int(_stdcall* MyProc)(); //width, height, size, srcTab, outTab
 		typedef int(_stdcall* MyProc)(int, int, std::byte*, std::byte*); //width, height, size, srcTab, outTab
 		HINSTANCE dllHandle = NULL;
 		dllHandle = LoadLibrary(TEXT("JaAsm.dll"));
@@ -93,7 +105,6 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 		//start timer
 		auto start = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Before thread" << std::endl;
 		//run threads
 		std::vector<std::thread> threadsList;
 		for (int i = 0; i < threads - 1; i++)
@@ -101,10 +112,6 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 			threadsList.push_back(std::thread(procedura, sourceImage->getWidth(), rowsPerThread, sourceImage->getArray() + (sourceImage->getWidth() * (i)*rowsPerThread + sourceImage->getWidth()), outputImage->getArray() + (sourceImage->getWidth() * (i + 1) * rowsPerThread + sourceImage->getWidth())));
 		}
 		threadsList.push_back(std::thread(procedura, sourceImage->getWidth(), rowsForLastThread, sourceImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread), outputImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread)));
-
-			//procedura(sourceImage->getWidth(), sourceImage->getHeight(), sourceImage->getArray(), outputImage->getArray());
-			//	procedura(sourceImage->getWidth(), sourceImage->getHeight()-1, sourceImage->getArray()+(sourceImage->getWidth()*3), outputImage->getArray() + (sourceImage->getWidth() * 3));
-			//procedura(w, h, inI, outI);
 
 		//wait for all threads
 		for (int i = 0; i < threads; i++)
@@ -161,87 +168,6 @@ void EdgeManager::saveImage(bool saveOutputImage, std::string path)
 			sourceImage->saveImage(path);
 	}
 }
-
-//void EdgeManager::edgeCppFilter(ImageCV& input, ImageCV& output)
-//{
-//
-//	//Image oldCopy(image);
-//	//	int matrix[9] = { 1,1,1,1,1,1,1,1,1 };
-//	//int matrix[9] = { 0.5,1,0.5,1,-6,1,0.5,1,0.5 };
-//	int matrix[9] = { 0,1,0,1,-4,1,0,1,0 };
-//	//for (int y = 0; y < input.getHeight(); y++)
-//	//	for (int x = 0; x < input.getWidth(); x++)
-//	for (int y = 3; y < input.getHeight()-3; y++)
-//		for (int x = 3; x < input.getWidth()-3; x++)
-//		{
-//
-//			int center = y * input.getWidth() * 3 + x * 3;
-//			int indexMatrix[9] = { 
-//				center - input.getWidth()*3 - 3,
-//				center - input.getWidth() * 3,
-//				center - input.getWidth() * 3 + 3,
-//			center - 3,
-//					center, 
-//				center + 3,
-//			center + input.getWidth() * 3 - 3 ,
-//				center + input.getWidth() * 3 ,
-//				center + input.getWidth() * 3 + 3 };
-//
-//			//if (indexMatrix[4] - x == 0)
-//			//{
-//			//	indexMatrix[0] = indexMatrix[4]; indexMatrix[1] = indexMatrix[4]; indexMatrix[2] = indexMatrix[4];
-//			//}
-//			//else if (((indexMatrix[4] - x) % input.getWidth()) == 0)
-//			//{
-//			//	indexMatrix[6] = indexMatrix[4]; indexMatrix[7] = indexMatrix[4]; indexMatrix[8] = indexMatrix[4];
-//			//}
-//			//if (indexMatrix[4] % input.getWidth() == 0)
-//			//{
-//			//	indexMatrix[0] = indexMatrix[4]; indexMatrix[3] = indexMatrix[4]; indexMatrix[6] = indexMatrix[4];
-//			//}
-//			//else if (((indexMatrix[4] + 1) % input.getWidth()) == 0)
-//			//{
-//			//	indexMatrix[2] = indexMatrix[4]; indexMatrix[5] = indexMatrix[4]; indexMatrix[8] = indexMatrix[4];
-//			//}
-//
-//			int newR = input.getArray()[indexMatrix[0]] * matrix[0] + input.getArray()[indexMatrix[1]] * matrix[1] + input.getArray()[indexMatrix[2]] * matrix[2] +
-//				input.getArray()[indexMatrix[3]] * matrix[3] + input.getArray()[indexMatrix[4]] * matrix[4] + input.getArray()[indexMatrix[5]] * matrix[5] +
-//				input.getArray()[indexMatrix[6]] * matrix[6] + input.getArray()[indexMatrix[7]] * matrix[7] + input.getArray()[indexMatrix[8]] * matrix[8];
-//			if (newR > 255)
-//				newR = 255;
-//			else if (newR <= 0)
-//				newR = 0;
-//
-//			int newG = input.getArray()[indexMatrix[0]+1] * matrix[0] + input.getArray()[indexMatrix[1] + 1] * matrix[1] + input.getArray()[indexMatrix[2] + 1] * matrix[2] +
-//				input.getArray()[indexMatrix[3] + 1] * matrix[3] + input.getArray()[indexMatrix[4] + 1] * matrix[4] + input.getArray()[indexMatrix[5] + 1] * matrix[5] +
-//				input.getArray()[indexMatrix[6] + 1] * matrix[6] + input.getArray()[indexMatrix[7] + 1] * matrix[7] + input.getArray()[indexMatrix[8] + 1] * matrix[8];
-//			if(newG > 255)
-//				newG = 255;
-//			else if (newG <= 0)
-//				newG = 0;
-//
-//
-//			int newB = input.getArray()[indexMatrix[0] + 2] * matrix[0] + input.getArray()[indexMatrix[1] + 2] * matrix[1] + input.getArray()[indexMatrix[2] + 2] * matrix[2] +
-//				input.getArray()[indexMatrix[3] + 2] * matrix[3] + input.getArray()[indexMatrix[4] + 2] * matrix[4] + input.getArray()[indexMatrix[5] + 2] * matrix[5] +
-//				input.getArray()[indexMatrix[6] + 2] * matrix[6] + input.getArray()[indexMatrix[7] + 2] * matrix[7] + input.getArray()[indexMatrix[8] + 2] * matrix[8];
-//			if(newB > 255)
-//				newB = 255;
-//			else if (newB <= 0)
-//				newB = 0;
-//
-//			//Kind of zmniejsza efekt kolorow
-//			//if (newR > 50 && newG < 50 && newB < 50)
-//			//	newR = 0;
-//			//if (newG > 50 && newG < 50 && newR < 50)
-//			//	newG = 0;
-//			//if (newB > 50 && newG < 50 && newR < 50)
-//			//	newB = 0;
-//
-//			output.getArray()[indexMatrix[4]] = newR;
-//			output.getArray()[indexMatrix[4] + 1] = newG;
-//			output.getArray()[indexMatrix[4]+2] = newB;
-//		}
-//}
 
 EdgeManager::~EdgeManager()
 {

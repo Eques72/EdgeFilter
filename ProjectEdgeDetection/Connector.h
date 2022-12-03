@@ -4,11 +4,6 @@
 #include <windows.h>
 #include <string>
 #include "EdgeManager.h"
-// 
-//for "testing"
-//#include <iostream>
-//int testF();
-
 
 class Connector 
 {
