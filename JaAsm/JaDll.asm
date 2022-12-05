@@ -7,6 +7,7 @@
 ; Creator: Adrian Zarêba									;					
 ;															;
 ; Version:		
+;		5.12.22
 ;		2.12.22
 ;		18.11.22
 ;		16.11.22
@@ -37,7 +38,7 @@ maxrgbvalue WORD 255
 .code
 
 ;================================================================================================================
-; Procedure: NAME																				;
+; Procedure: EdgeDetectionFilter																								;
 ; Description:																									;
 ;	Imposes edge detection filter on image represented as an array of pixels(r g b). The filter is based		;
 ; 	 on multiplication of neighbouring pixels and matrix of weights.											;
@@ -46,20 +47,12 @@ maxrgbvalue WORD 255
 ; Parameters:																									;
 ;  rdx = image height - in pixels,																				;
 ;  rcx = image width - in pixels,																				;
-;  r8 = original image source - address in memory of pixel array which represents original image to be filtered;
+;  r8 = original image source - address in memory of pixel array which represents original image to be filtered ;
 ;  r9 = edited image source - address in memory of pixel array which represents a new filtered image,			;
-;	 all changes are to be made on this array	
-;  Uses registers: RAX, RBX, RDI, R10, R11, R12, R13
+;	 all changes are to be made on this array																	;
+;  Uses registers: RAX, RBX, RDI, R10, R11, R12, R13															;
 ;================================================================================================================
-MyProc proc 
-
-PUSH RAX
-PUSH RBX
-PUSH RDI
-PUSH R10
-PUSH R11
-PUSH R12
-PUSH R13
+EdgeDetectionFilter proc 
 
 mov rax, 0 ;Y - counter for outer loop
 mov rbx, 0 ;X - counter for inner loop
@@ -122,14 +115,6 @@ cmp rax, rdx	;outer loop
 JL	ROWS  		;outer loop
 ;------------
 
-POP R13
-POP R12
-POP R11
-POP R10
-POP RDI
-POP RBX
-POP RAX
-
 ret
 
 REDUCE_NEG:		;Accesible only by jump
@@ -139,5 +124,5 @@ REDUCE_BIG:		;Accesible only by jump
 MOV R10W, maxrgbvalue	;Make color value fit its upper boundary
 JMP END_OF_RED	;Jump back to the loop
 
-MyProc endp
+EdgeDetectionFilter endp
 end

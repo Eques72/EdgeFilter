@@ -1,2 +1,2 @@
 LIBRARY JaAsm
-EXPORTS MyProc
+EXPORTS EdgeDetectionFilter
