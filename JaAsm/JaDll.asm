@@ -1,108 +1,103 @@
 ;============================================================
-; File: JaDll.asm									;
+; File: JaDll.asm											;
 ;															;
 ; An assembly project, which contains a pocedure for	 	;
 ; edge detection algorithm in images						;
 ;															;
 ; Creator: Adrian Zarêba									;					
 ;															;
-; Version:		
-;		5.12.22
-;		2.12.22
-;		18.11.22
-;		16.11.22
-;		3.11.22
-; 0.1 / 22.10.2022 - file and initial comments created		;
+; Version:													;
+; 0.3 / 5.12.2022	 - some instrucions moved to sse		;
 ; Past versions/Version history:							;
-; -															;
+; 0.2.1 / 2.12.2022  - vetical shift bug removed			;
+; 0.2 / 18.11.2022	 - implementation of the filter			;
+; 0.1.2 / 16.11.2022 - iteration through pixels				;
+; 0.1.1 / 3.11.2022	 - loop constructed						;
+; 0.1 / 22.10.2022	 - file and initial comments created	;
 ;============================================================
 
-
-;NOTATKI
-;[+4] przesuwa o 1 index (32bity);
-;r9d - 32 bit
-;r9b - 8 bit
-;r9w - 16 bit
-;r9 - 64 bit
-
 .data
-center WORD -4
-borders WORD 1
-zero WORD 0
-channels Qword 1
-maxrgbvalue WORD 255
-;center real4 -4.0
-;borders real4 1.0
-;zero real4 0.0
+CENTER WORD -4
+MAXRGB WORD 255
+MAXVAL WORD 200
 
 .code
-
 ;================================================================================================================
-; Procedure: EdgeDetectionFilter																								;
-; Description:																									;
+; Procedure: EdgeDetectionFilter																				;
+; Description:																									s;
 ;	Imposes edge detection filter on image represented as an array of pixels(r g b). The filter is based		;
 ; 	 on multiplication of neighbouring pixels and matrix of weights.											;
 ;    It works on two arrays stored in memory.																	;
 ;																												;
 ; Parameters:																									;
-;  rdx = image height - in pixels,																				;
-;  rcx = image width - in pixels,																				;
-;  r8 = original image source - address in memory of pixel array which represents original image to be filtered ;
-;  r9 = edited image source - address in memory of pixel array which represents a new filtered image,			;
+;  RDX = image height - in pixels,																				;
+;  RCX = image width - in pixels,																				;
+;  R8 = original image source - address in memory of pixel array which represents original image to be filtered ;
+;  R9 = edited image source - address in memory of pixel array which represents a new filtered image,			;
 ;	 all changes are to be made on this array																	;
-;  Uses registers: RAX, RBX, RDI, R10, R11, R12, R13															;
+;  Uses registers: RAX, RBX, RDI, R12, R13, XMM0, XMM1, XMM2													;
 ;================================================================================================================
 EdgeDetectionFilter proc 
 
 mov rax, 0 ;Y - counter for outer loop
 mov rbx, 0 ;X - counter for inner loop
 
-ROWS:		;outer loop, height,Y
-COLLUMNS:	;inner loop, width, X
+ROWS:		;Outer loop, height of the image, Y axis
+COLLUMNS:	;Inner loop, width of the image, X axis
 ;------------
-MOV rdi, rax  ;POS
-imul rdi, rcx ;>
-add rdi, rbx  ;>this gives pos
-;++++++
+MOV rdi, rax  ; Calculating position of the pixel 
+imul rdi, rcx ;  which means calculating an offset for the table
+add rdi, rbx  ; Calculated offset now stored in RDI
 
-MOV R10, 0
-MOV R10B, BYTE ptr[r8+rdi]	;Read value from tab (from specific adress)  
-IMUL R10W, center	
+;Get center pixel and give it weight
+VPBROADCASTB XMM0, BYTE PTR[RDI+R8] 
+PSRLDQ XMM0, 15
+VPBROADCASTW XMM1, CENTER
+PMULLD XMM0, XMM1
 
-;PREVIOUS (LEFT) PIXEL
-MOV R11, 0
-MOV R11B, BYTE ptr[R8+RDI-1]
-ADD R10W, R11W
+;LEFT PIXEL
+VPBROADCASTB XMM1, BYTE PTR[RDI+R8-1]
+PSRLDQ XMM1, 15
+PADDW XMM0, XMM1
 
-;NEXT (RIGHT) PIXEL
-MOV R11, 0
-MOV R11B, BYTE ptr[R8+RDI+1]
-ADD R10W, R11W
-;+++++++++++
+;RIGHT PIXEL
+VPBROADCASTB XMM1, BYTE PTR[RDI+R8+1]
+PSRLDQ XMM1, 15
+PADDW XMM0, XMM1
 
 ;BELOW PIXEL
 mov r12, rcx
 add r12, rdi
-MOV R11, 0
-MOV R11B, BYTE ptr[r8+r12]
-ADD R10W, R11W
+VPBROADCASTB XMM1, BYTE PTR[R8+R12] 
+PSRLDQ XMM1, 15
+PADDW XMM0, XMM1
 
 ;TOP PIXEL
 mov r13, rcx 
 mov r12, rdi
 sub r12, r13
-MOV R11B, BYTE ptr[r8+r12]
-ADD R10W, R11W
+VPBROADCASTB XMM1, BYTE PTR[R8+R12] 
+PSRLDQ XMM1, 15
+PADDW XMM0, XMM1
 
-CMP R10W, zero
-JL REDUCE_NEG
+;COMP MANOVER
+MOVDQA XMM2, XMM0
 
-CMP R10W, 200
-JG REDUCE_BIG
+pxor  xmm1, xmm1
+PCMPGTW xmm1, xmm2 ;if first is greater
+movd r12, xmm1
+CMP r12b, 255 
+JE REDUCE_NEG
+
+VPBROADCASTW xmm1, MAXVAL
+PCMPGTW xmm2,xmm1 ;if first is greater
+movd r12, xmm2
+CMP r12b, 255 
+JE REDUCE_BIG
 END_OF_RED:
 
-MOV BYTE ptr[r9+rdi], R10B	;Insert value to tab (to specific adress)
-;mov dword ptr[r8+rdi], r10d	;Insert value to tab (to specific adress)
+movd r12d, XMM0
+MOV BYTE PTR[RDI+R9], R12B ;Insert value to tab (to specific adress)
 
 INC	rbx			;inner loop
 CMP	rbx, rcx	;inner loop
@@ -117,12 +112,12 @@ JL	ROWS  		;outer loop
 
 ret
 
-REDUCE_NEG:		;Accesible only by jump
-MOV R10W, zero		;Make color value fit its lower boundary
-JMP END_OF_RED	;Jump back to the loop
-REDUCE_BIG:		;Accesible only by jump
-MOV R10W, maxrgbvalue	;Make color value fit its upper boundary
-JMP END_OF_RED	;Jump back to the loop
+REDUCE_NEG:				;Accesible only by jump
+pxor xmm0, xmm0			;Make color value fit its lower boundary
+JMP END_OF_RED			;Jump back to the loop
+REDUCE_BIG:				;Accesible only by jump
+VPBROADCASTW XMM0, MAXRGB	;Make color value fit its upper boundary
+JMP END_OF_RED			;Jump back to the loop
 
 EdgeDetectionFilter endp
 end

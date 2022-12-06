@@ -103,22 +103,25 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 		//start timer
 		auto start = std::chrono::high_resolution_clock::now();
 
-		//run threads
-		std::vector<std::thread> threadsList;
-		for (int i = 0; i < threads - 1; i++)
-		{
-			threadsList.push_back(std::thread(asmFilter, sourceImage->getWidth(), rowsPerThread, 
-			sourceImage->getArray() + (sourceImage->getWidth() * (i)*rowsPerThread + sourceImage->getWidth()), 
-			outputImage->getArray() + (sourceImage->getWidth() * (i) * rowsPerThread + sourceImage->getWidth())));
-		}
-		threadsList.push_back(std::thread(asmFilter, sourceImage->getWidth(), 
-			rowsForLastThread, sourceImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread),
-			outputImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread)));
+			//run threads
+			std::vector<std::thread> threadsList;
+			for (int i = 0; i < threads - 1; i++)
+			{
+				threadsList.push_back(std::thread(asmFilter, sourceImage->getWidth(), rowsPerThread,
+					sourceImage->getArray() + (sourceImage->getWidth() * (i)*rowsPerThread + sourceImage->getWidth()),
+					outputImage->getArray() + (sourceImage->getWidth() * (i)*rowsPerThread + sourceImage->getWidth())));
+			}
+			if (rowsForLastThread > 0)
+				threadsList.push_back(std::thread(asmFilter, sourceImage->getWidth(),
+					rowsForLastThread, sourceImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread),
+					outputImage->getArray() + (sourceImage->getWidth() + sourceImage->getWidth() * (threads - 1) * rowsPerThread)));
+			else
+				threadsList.push_back(std::thread());
 
-		//wait for all threads
-		for (int i = 0; i < threads; i++)
-			if (threadsList[i].joinable())
-				threadsList[i].join();
+			//wait for all threads
+			for (int i = 0; i < threads; i++)
+				if (threadsList[i].joinable())
+					threadsList[i].join();
 
 		//stop timer
 		auto stop = std::chrono::high_resolution_clock::now();
