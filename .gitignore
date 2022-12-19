@@ -359,3 +359,5 @@ MigrationBackup/
 /ProjectEdgeDetection/JAProjectEdgeDetection.vcxproj.filters
 /ProjectEdgeDetection/JAProjectEdgeDetection.vcxproj.user
 /ProjectEdgeDetection/ProjectEdgeDetection.sln
+/CppLib/CppLib.vcxproj.filters
+/CppLib/CppLib.vcxproj

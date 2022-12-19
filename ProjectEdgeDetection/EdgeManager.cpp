@@ -1,7 +1,4 @@
 #include "EdgeManager.h"
-#include <iostream>
-
-void edgeCppFilterO(ImageCV& input, ImageCV& output, int startingRow, int height);
 
 void EdgeManager::setSourceImage(std::string path, bool isToBeRbg)
 {
@@ -73,11 +70,16 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 		//start timer
 		auto start = std::chrono::high_resolution_clock::now();
 
+		typedef int(_stdcall* edgeFilterCpp)(std::byte*, std::byte*, int, int, int, int);
+		HINSTANCE dllHandleC = NULL;
+		dllHandleC = LoadLibrary(TEXT("CppLib.dll"));
+		edgeFilterCpp eFC = (edgeFilterCpp)GetProcAddress(dllHandleC, "edgeFilterCpp");
+
 		//run threads
 		std::vector<std::thread> threadsList;
 		for (int i = 0; i < threads - 1; i++)
-			threadsList.push_back(std::thread(edgeCppFilterO, std::ref(*sourceImage), std::ref(*outputImage), 1 + i*rowsPerThread, rowsPerThread));
-		threadsList.push_back(std::thread(edgeCppFilterO, std::ref(*sourceImage), std::ref(*outputImage), 1 + (threads-1) * rowsPerThread, rowsForLastThread));
+			threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + i * rowsPerThread, rowsPerThread));
+		threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + (threads - 1) * rowsPerThread, rowsForLastThread));
 
 		//wait for all threads
 		for (int i = 0; i < threads; i++)
@@ -180,34 +182,4 @@ EdgeManager::~EdgeManager()
 	delete sourceImage;
 	if(outputImage != nullptr)
 	delete outputImage;
-}
-
-void edgeCppFilterO(ImageCV& input, ImageCV& output, int startingRow, int height)
-{
-	int matrix[9] = { 0,1,0,1,-4,1,0,1,0 };
-
-	for (int y = startingRow; y < height + startingRow; y++)
-		for (int x = 0; x < input.getWidth(); x++)
-		{
-			int center = y * input.getWidth() * input.getNumOfChannels() + x * input.getNumOfChannels();
-			int indexMatrix[9] = {
-				center - input.getWidth() * input.getNumOfChannels() - input.getNumOfChannels(),
-				center - input.getWidth() * input.getNumOfChannels(),
-				center - input.getWidth() * input.getNumOfChannels() + input.getNumOfChannels(),
-				center - input.getNumOfChannels(),
-				center,
-				center + input.getNumOfChannels(),
-				center + input.getWidth() * input.getNumOfChannels() - input.getNumOfChannels() ,
-				center + input.getWidth() * input.getNumOfChannels() ,
-				center + input.getWidth() * input.getNumOfChannels() + input.getNumOfChannels() };
-			
-			int newPixel = (int)input.getArray()[indexMatrix[0]] * matrix[0] + (int)input.getArray()[indexMatrix[1]] * matrix[1] + (int)input.getArray()[indexMatrix[2]] * matrix[2] +
-				(int)input.getArray()[indexMatrix[3]] * matrix[3] + (int)input.getArray()[indexMatrix[4]] * matrix[4] + (int)input.getArray()[indexMatrix[5]] * matrix[5] +
-				(int)input.getArray()[indexMatrix[6]] * matrix[6] + (int)input.getArray()[indexMatrix[7]] * matrix[7] + (int)input.getArray()[indexMatrix[8]] * matrix[8];
-			if (newPixel > 200)
-				newPixel = 255;
-			else if (newPixel <= 0)
-				newPixel = 0;
-			output.getArray()[indexMatrix[4]] = (std::byte)newPixel;
-		}
 }
