@@ -557,7 +557,7 @@ namespace JAProjectEdgeDetection {
 			pictureBox1->Load();
 			
 			auto originalImageSize = pictureBox1->Image->Size;
-			if (originalImageSize.Height > 45000 || originalImageSize.Width > 45000)
+			if (originalImageSize.Height > 11000 || originalImageSize.Width > 11000)
 				throw 2;
 			if (!pictureBox1->Image->RawFormat->Equals(System::Drawing::Imaging::ImageFormat::Bmp) &&
 				!pictureBox1->Image->RawFormat->Equals(System::Drawing::Imaging::ImageFormat::Jpeg) &&
@@ -567,6 +567,13 @@ namespace JAProjectEdgeDetection {
 
 			//set image path to the connector
 			connector->setImage(connector->converSysStrToStdStr(this->openFileDialog1->FileName));
+
+			//Get histogram and update graph
+			if (connector->startHistogram()) {
+				int histData[] = { connector->getGAmount(),connector->getBAmount(), connector->getRAmount() };
+				updateHistogram(histData);
+			}
+
 			}
 			catch (int mynum)
 			{
@@ -578,11 +585,6 @@ namespace JAProjectEdgeDetection {
 			catch (...)
 			{
 				System::Windows::Forms::MessageBox::Show("Can't load resource,\nplease choose .bmp, .png, .jpeg, .jpg or .tiff file");
-			}
-			//Get histogram and update graph
-			if (connector->startHistogram()) {
-				int histData[] = { connector->getGAmount(),connector->getBAmount(), connector->getRAmount() };
-				updateHistogram(histData);
 			}
 	}
 
