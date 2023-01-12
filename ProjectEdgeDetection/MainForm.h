@@ -2,6 +2,13 @@
 #include "Connector.h"
 #include "windows.h"
 
+//===================================================
+// File: MainForm.h
+// Contents: Defines frontend of the aplication and its behaviour and responses  
+// Parts of the code are auto generated, it is not recomended to do any changes in code bellow unless defining events
+// Author: Adrian Zarêba
+//===================================================
+
 namespace JAProjectEdgeDetection {
 
 	using namespace System;
@@ -537,7 +544,7 @@ namespace JAProjectEdgeDetection {
 #pragma endregion
 
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		//this button doesn't exists, method never gets invoked
+		//this button doesn't exists, method never gets invoked, can't be deleted for some reason, provides errors when deleted
 	}
 
 
@@ -547,6 +554,8 @@ namespace JAProjectEdgeDetection {
 	}
 
 	//LOAD IMAGE, UPDATE HISTORAGM
+	//Defines max acceptable size of images, defines acceptable formats. Handles exceptions and responses
+	//Loads image from given path from the dialog window and call the connector to get histogram data
 	private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
 		connector->setUnready();
@@ -588,6 +597,7 @@ namespace JAProjectEdgeDetection {
 			}
 	}
 
+	//Updates histogram
 	private: void updateHistogram(int histData[]) 
 	{
 		this->chart1->Series[0]->Points->Clear();
@@ -622,6 +632,7 @@ namespace JAProjectEdgeDetection {
 	}
 
 	//RUN FILTER BUTTON
+	//Calls connector to run the algorithm. Shows result image and data
 	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
 		//Set choosen library
@@ -653,10 +664,13 @@ namespace JAProjectEdgeDetection {
 	}
 
 
+//Does nothing
 private: System::Void listBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
 }
+//Does nothing
 private: System::Void label9_Click(System::Object^ sender, System::EventArgs^ e) {
 }
+//Does nothing
 private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
 }
 }; //class end

@@ -1,5 +1,13 @@
 #include "ImageCV.h"
 
+//===================================================
+// File: ImageCV.cpp
+// Contents: Definition file for ImageCV class. This class is a representation of image data and has capabilities to store, write and read images
+// For documantation, check ImageCV.h file
+// Author: Adrian Zarêba
+//===================================================
+
+
 void ImageCV::readImage(std::string path)
 {
 	cv::Mat m;

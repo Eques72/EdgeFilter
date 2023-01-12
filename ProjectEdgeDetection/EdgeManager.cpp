@@ -1,5 +1,12 @@
 #include "EdgeManager.h"
 
+//===================================================
+// File: EdgeManager.cpp
+// Contents: Definiton file for EdgeManager class. 
+// See EdgeManager.h file for documentation
+// Author: Adrian Zarêba
+//===================================================
+
 void EdgeManager::setSourceImage(std::string path, bool isToBeRbg)
 {
 	this->sourceImage = new ImageCV(path, isToBeRbg);
@@ -73,37 +80,42 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 		typedef int(_stdcall* edgeFilterCpp)(std::byte*, std::byte*, int, int, int, int);
 		HINSTANCE dllHandleC = NULL;
 		dllHandleC = LoadLibrary(TEXT("CppLib.dll"));
-		edgeFilterCpp eFC = (edgeFilterCpp)GetProcAddress(dllHandleC, "edgeFilterCpp");
+		if (dllHandleC != 0) 
+		{
+			edgeFilterCpp eFC = (edgeFilterCpp)GetProcAddress(dllHandleC, "edgeFilterCpp");
 
-		//run threads
-		std::vector<std::thread> threadsList;
-		for (int i = 0; i < threads - 1; i++)
-			threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + i * rowsPerThread, rowsPerThread));
-		threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + (threads - 1) * rowsPerThread, rowsForLastThread));
+			//run threads
+			std::vector<std::thread> threadsList;
+			for (int i = 0; i < threads - 1; i++)
+				threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + i * rowsPerThread, rowsPerThread));
+			threadsList.push_back(std::thread(eFC, sourceImage->getArray(), outputImage->getArray(), sourceImage->getWidth(), sourceImage->getHeight(), 1 + (threads - 1) * rowsPerThread, rowsForLastThread));
 
-		//wait for all threads
-		for (int i = 0; i < threads; i++)
-			if (threadsList[i].joinable())
-				threadsList[i].join();
-		
-		//stop timer
-		auto stop = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-		this->timeTaken = duration.count();
+			//wait for all threads
+			for (int i = 0; i < threads; i++)
+				if (threadsList[i].joinable())
+					threadsList[i].join();
 
-		saveImage(true, outputPath);//save image
+			//stop timer
+			auto stop = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+			this->timeTaken = duration.count();
 
-		return true;
+			saveImage(true, outputPath);//save image
+
+			return true;
+		}
 	}
 	else if(libType == 1) //ASM
 	{
 		typedef int(_stdcall* EdgeDetectionFilter)(int, int, std::byte*, std::byte*); //width, height, size, srcTab, outTab
 		HINSTANCE dllHandle = NULL;
 		dllHandle = LoadLibrary(TEXT("AsmLib.dll"));
-		EdgeDetectionFilter asmFilter = (EdgeDetectionFilter)GetProcAddress(dllHandle, "EdgeDetectionFilter");
+		if (dllHandle != 0)
+		{
+			EdgeDetectionFilter asmFilter = (EdgeDetectionFilter)GetProcAddress(dllHandle, "EdgeDetectionFilter");
 
-		//start timer
-		auto start = std::chrono::high_resolution_clock::now();
+			//start timer
+			auto start = std::chrono::high_resolution_clock::now();
 
 			//run threads
 			std::vector<std::thread> threadsList;
@@ -125,14 +137,15 @@ bool EdgeManager::runEdgeFilter(int libType, int threads)
 				if (threadsList[i].joinable())
 					threadsList[i].join();
 
-		//stop timer
-		auto stop = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-		this->timeTaken = duration.count();
+			//stop timer
+			auto stop = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+			this->timeTaken = duration.count();
 
-		saveImage(true, outputPath);//save image 
+			saveImage(true, outputPath);//save image 
 
-		return true;
+			return true;
+		}
 	}
 	return false;
 }

@@ -1,5 +1,12 @@
 #include "Connector.h"
 
+//===================================================
+// File: Connector.h
+// Contents: Definition file for EdgeManager class. 
+// See Connector.h file for documentation
+// Author: Adrian Zarêba
+//===================================================
+
 const int Connector::DEFAULT_NUM_OF_THREADS = 1;
 const int Connector::DEFAULT_CHOOSEN_LIB = 0;
 

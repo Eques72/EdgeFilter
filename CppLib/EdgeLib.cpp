@@ -1,6 +1,13 @@
+//===================================================
+// File: EdgeLib.cpp
+// Contents: Definition file for dynamic cpp library, contains edge filter algorithm 
+// Author: Adrian Zarêba
+//===================================================
 #include "pch.h" // use stdafx.h in Visual Studio 2017 and earlier
-#include "EdgeLib.h"
+#include "EdgeLib.h" //Declarations
 
+//See EdgeLib.h for documentation.
+//Matrix can be replaced with different one as long as its 3x3 (int)
 void edgeFilterCpp(std::byte* input, std::byte* output, int imgWidth, int imgHeight, int startingRow, int height) {
 	int matrix[9] = { 0,1,0,1,-4,1,0,1,0 };
 
@@ -19,9 +26,12 @@ void edgeFilterCpp(std::byte* input, std::byte* output, int imgWidth, int imgHei
 				center + imgWidth,
 				center + imgWidth + 1 };
 
-			int newPixel = (int)input[indexMatrix[0]] * matrix[0] + (int)input[indexMatrix[1]] * matrix[1] + (int)input[indexMatrix[2]] * matrix[2] +
-				(int)input[indexMatrix[3]] * matrix[3] + (int)input[indexMatrix[4]] * matrix[4] + (int)input[indexMatrix[5]] * matrix[5] +
-				(int)input[indexMatrix[6]] * matrix[6] + (int)input[indexMatrix[7]] * matrix[7] + (int)input[indexMatrix[8]] * matrix[8];
+			int newPixel = (int)input[indexMatrix[0]] * matrix[0] + 
+				(int)input[indexMatrix[1]] * matrix[1] + (int)input[indexMatrix[2]] * matrix[2] + 
+				(int)input[indexMatrix[3]] * matrix[3] + (int)input[indexMatrix[4]] * matrix[4] + 
+				(int)input[indexMatrix[5]] * matrix[5] + (int)input[indexMatrix[6]] * matrix[6] + 
+				(int)input[indexMatrix[7]] * matrix[7] + (int)input[indexMatrix[8]] * matrix[8];
+
 			if (newPixel > 200)
 				newPixel = 255;
 			else if (newPixel <= 0)
